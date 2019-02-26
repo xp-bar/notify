@@ -1,0 +1,43 @@
+#! /bin/zsh
+
+local text=$1
+local file="$HOME/.notifications"
+
+read_notifications() {
+    tput smcup
+    tput sc
+    tput cup 0 0
+    if [[ "$(cat $file)" == "" ]]; then
+        tput rmcup
+        tput rc
+        return 0;
+    fi
+    cat $file | sed 's/^\[ \]*$//g' | nl -s ": " -b t
+    read "del?Delete: "
+    if [[ $del != "" && $del != "q" ]]; then
+        echo -n "$(cat $file | sed "$(echo $del)d" | sed 's/^\[ \]*$//g')" > $file;
+    fi
+    tput rmcup
+    tput rc
+}
+
+add_notification() {
+    echo "$1" >> $file
+}
+
+if [[ $text == "" ]]; then
+    echo "Usage: notify 'text' | notify read | notify clear"
+    return 1;
+fi
+
+if [[ $text == "read" ]]; then
+    read_notifications
+    return 0;
+fi
+
+if [[ $text == "clear" ]]; then
+    echo -n "" > $file
+    return 0;
+fi
+
+add_notification $text
